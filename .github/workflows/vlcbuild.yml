@@ -54,6 +54,9 @@ jobs:
         run: |
           set -euxo pipefail
           cd "$GITHUB_WORKSPACE/vlc-3.0.17.4"
+          # Force Position Independent Code to fix shared library link errors
+          export CFLAGS="-O2 -fPIC"
+          export CXXFLAGS="-O2 -fPIC"
           ./configure --prefix="$GITHUB_WORKSPACE/vlc-build" --enable-static --enable-shared 2>&1 | tee "$GITHUB_WORKSPACE/vlc-configure.log"
           make -j$(nproc) 2>&1 | tee "$GITHUB_WORKSPACE/vlc-make.log"
           make install 2>&1 | tee "$GITHUB_WORKSPACE/vlc-makeinstall.log"
