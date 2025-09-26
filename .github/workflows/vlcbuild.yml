@@ -40,7 +40,8 @@ jobs:
             libxcb-composite0-dev libxcb-render0-dev libxcb-xfixes0-dev libxcb-keysyms1-dev \
             libxcb-randr0-dev libxcb-image0-dev libxcb-icccm4-dev libxcb-sync0-dev \
             libxcb-shape0-dev libxcb-xinerama0-dev libxcb-xkb-dev x11proto-composite-dev \
-            x11proto-randr-dev x11proto-xext-dev
+            x11proto-randr-dev x11proto-xext-dev \
+            libbsd-dev
           apt-get clean
 
       - name: Download VLC 3.0.17.4 source
@@ -54,10 +55,10 @@ jobs:
         run: |
           set -euxo pipefail
           cd "$GITHUB_WORKSPACE/vlc-3.0.17.4"
-          # Force Position Independent Code to fix shared library link errors
+          # Force Position Independent Code and disable static linking
           export CFLAGS="-O2 -fPIC"
           export CXXFLAGS="-O2 -fPIC"
-          ./configure --prefix="$GITHUB_WORKSPACE/vlc-build" --enable-static --enable-shared 2>&1 | tee "$GITHUB_WORKSPACE/vlc-configure.log"
+          ./configure --prefix="$GITHUB_WORKSPACE/vlc-build" --enable-shared --disable-static 2>&1 | tee "$GITHUB_WORKSPACE/vlc-configure.log"
           make -j$(nproc) 2>&1 | tee "$GITHUB_WORKSPACE/vlc-make.log"
           make install 2>&1 | tee "$GITHUB_WORKSPACE/vlc-makeinstall.log"
           ls -la "$GITHUB_WORKSPACE/vlc-build" || true
