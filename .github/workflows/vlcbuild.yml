@@ -10,6 +10,9 @@ jobs:
       image: debian:bullseye
     env:
       DEBIAN_FRONTEND: noninteractive
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout repository
@@ -31,3 +34,15 @@ jobs:
             libtheora-dev libspeex-dev libsndfile1-dev libpulse-dev libjack-jackd2-dev \
             libasound2-dev libavcodec-dev libavformat-dev libswscale-dev libavutil-dev \
             libpostproc-dev libvpx-dev libx264-dev libx265-dev libnuma-dev zlib1g-dev \
+            libfribidi-dev libfreetype6-dev libfontconfig1-dev libharfbuzz-dev \
+            libpango1.0-dev libsdl2-dev libmodplug-dev
+          apt-get clean
+
+      - name: Download VLC 3.0.17.4 source
+        run: |
+          set -euxo pipefail
+          cd "$GITHUB_WORKSPACE"
+          wget --progress=dot:giga https://download.videolan.org/pub/videolan/vlc/3.0.17.4/vlc-3.0.17.4.tar.xz
+          tar xf vlc-3.0.17.4.tar.xz
+
+      - name
