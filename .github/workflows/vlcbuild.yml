@@ -1,20 +1,5 @@
-name: Build VLC 3.0.17.4 on Debian Bullseye
-
-on:
-  workflow_dispatch:
-
-jobs:
-  build-vlc:
-    runs-on: ubuntu-22.04
-    container:
-      image: debian:bullseye
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Update and install dependencies
         run: |
-          set -euxo pipefail
           export DEBIAN_FRONTEND=noninteractive
           apt-get update && apt-get upgrade -y
           apt-get install -y \
@@ -87,24 +72,3 @@ jobs:
             libpango1.0-dev \
             libsdl2-dev \
             libmodplug-dev
-
-      - name: Download VLC 3.0.17.4 source
-        run: |
-          set -euxo pipefail
-          wget https://download.videolan.org/pub/videolan/vlc/3.0.17.4/vlc-3.0.17.4.tar.xz
-          tar xf vlc-3.0.17.4.tar.xz
-
-      - name: Configure, compile, and build VLC
-        run: |
-          set -euxo pipefail
-          cd vlc-3.0.17.4
-          ./configure --prefix=${{ github.workspace }}/vlc-build --enable-static --enable-shared
-          make -j$(nproc)
-          make install
-          ls -R ${{ github.workspace }}/vlc-build || true
-
-      - name: Upload VLC build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: vlc-build
-          path: vlc-build
