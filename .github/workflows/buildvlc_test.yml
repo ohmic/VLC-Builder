@@ -1,4 +1,4 @@
-name: Build VLC 3.0.17.4 with Qt5 GUI on Debian Bullseye
+name: Build VLC 3.0.17.4 with GTK GUI on Debian Bullseye
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install VLC build dependencies (with Qt5 GUI)
+      - name: Install VLC build dependencies (GTK GUI + codecs)
         run: |
           set -euxo pipefail
           apt-get update
@@ -41,7 +41,8 @@ jobs:
             libxcb-randr0-dev libxcb-image0-dev libxcb-icccm4-dev libxcb-sync0-dev \
             libxcb-shape0-dev libxcb-xinerama0-dev libxcb-xkb-dev x11proto-composite-dev \
             x11proto-randr-dev x11proto-xext-dev libbsd-dev \
-            qtbase5-dev qttools5-dev qt5-qmake libqt5svg5-dev
+            libgtk-3-dev libgdk-pixbuf2.0-dev libepoxy-dev libatk1.0-dev libcairo2-dev \
+            libpango1.0-dev
           apt-get clean
 
       - name: Download VLC 3.0.17.4 source
@@ -51,7 +52,7 @@ jobs:
           wget --progress=dot:giga https://download.videolan.org/pub/videolan/vlc/3.0.17.4/vlc-3.0.17.4.tar.xz
           tar xf vlc-3.0.17.4.tar.xz
 
-      - name: Configure, compile, and build VLC with Qt5 GUI
+      - name: Configure, compile, and build VLC with GTK GUI
         run: |
           set -euxo pipefail
           cd "$GITHUB_WORKSPACE/vlc-3.0.17.4"
@@ -59,7 +60,17 @@ jobs:
           export CXXFLAGS="-O2 -fPIC"
           ./configure --prefix="$GITHUB_WORKSPACE/vlc-build" \
             --enable-shared --disable-static \
-            --enable-qt --with-qt=qt5
+            --enable-gtk \
+            --enable-x265 \
+            --enable-x264 \
+            --enable-libvpx \
+            --enable-libflac \
+            --enable-faac \
+            --enable-mpg123 \
+            --enable-opus \
+            --enable-theora \
+            --enable-vorbis \
+            --enable-speex
           make -j$(nproc)
           make install
 
@@ -67,10 +78,10 @@ jobs:
         run: |
           set -euxo pipefail
           cd "$GITHUB_WORKSPACE"
-          tar -cJf vlc-3.0.17.4.tar.xz -C vlc-build .
+          tar -cJf vlc-3.0.17.4-gtk.tar.xz -C vlc-build .
 
       - name: Upload VLC tarball
         uses: actions/upload-artifact@v4
         with:
-          name: vlc-3.0.17.4-qt5
-          path: vlc-3.0.17.4.tar.xz
+          name: vlc-3.0.17.4-gtk
+          path: vlc-3.0.17.4-gtk.tar.xz
