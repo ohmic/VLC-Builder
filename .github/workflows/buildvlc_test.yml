@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install VLC build dependencies (Qt GUI + codecs + FFmpeg libs)
+      - name: Install VLC build dependencies (Qt GUI + codecs + FFmpeg libs + skins2)
         run: |
           set -euxo pipefail
           apt-get update
@@ -41,6 +41,7 @@ jobs:
             libxcb-randr0-dev libxcb-image0-dev libxcb-icccm4-dev libxcb-sync0-dev \
             libxcb-shape0-dev libxcb-xinerama0-dev libxcb-xkb-dev x11proto-composite-dev \
             x11proto-randr-dev x11proto-xext-dev libbsd-dev \
+            libxpm-dev \
             qtbase5-dev qttools5-dev qt5-qmake libqt5svg5-dev \
             libavdevice-dev libavfilter-dev libavresample-dev libswresample-dev libmatroska-dev
           apt-get clean
