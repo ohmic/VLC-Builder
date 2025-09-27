@@ -1,101 +1,85 @@
-name: Build VLC 3.0.17.4 full-feature Qt GUI on Debian Bullseye
+name: Build VLC 3.0.17.4 for Debian Bullseye
 
 on:
   workflow_dispatch:
 
 jobs:
-  build-vlc:
-    runs-on: ubuntu-22.04
-    container:
-      image: debian:bullseye
-    env:
-      DEBIAN_FRONTEND: noninteractive
-    defaults:
-      run:
-        shell: bash
-
+  build:
+    runs-on: ubuntu-20.04   # closer to Bullseye deps
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install VLC build dependencies (Qt GUI + codecs + FFmpeg + OpenGL + XVideo)
+      - name: Checkout VLC source
         run: |
-          set -euxo pipefail
-          apt-get update
-          apt-get upgrade -y
-          apt-get install -y \
-            build-essential pkg-config autoconf automake libtool git wget curl \
-            yasm nasm cmake meson ninja-build intltool libtool-bin python3 python3-pip \
+          sudo apt-get update
+          sudo apt-get install -y git
+          git clone https://code.videolan.org/videolan/vlc.git
+          cd vlc
+          git checkout 3.0.17.4
+          cd ..
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake build-essential cmake \
+            pkg-config git wget curl \
+            libtool libtool-bin m4 yasm nasm \
+            libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev \
+            libx11-dev libxext-dev libxinerama-dev libxrandr-dev \
+            libqt5x11extras5-dev qtbase5-dev qttools5-dev \
+            libgl1-mesa-dev libgles2-mesa-dev \
+            libavcodec-dev libavformat-dev libswscale-dev libavutil-dev \
+            liba52-0.7.4-dev libmad0-dev libmpeg2-4-dev \
+            libvorbis-dev libogg-dev libopus-dev \
+            libtheora-dev libflac-dev libspeex-dev \
+            libvpx-dev libx264-dev libx265-dev \
+            libdvdnav-dev libdvdread-dev libbluray-dev \
+            libass-dev libfreetype6-dev \
             lua5.2 liblua5.2-dev \
-            liba52-0.7.4-dev libbluray-dev libdvdnav-dev libdvdread-dev libdvbpsi-dev \
-            libxcb-shm0-dev libxcb-xv0-dev libxcb1-dev libx11-dev libxext-dev \
-            libxinerama-dev libxrandr-dev libxv-dev libva-dev libvdpau-dev libgles2-mesa-dev \
-            libwayland-dev wayland-protocols libgcrypt20-dev libgnutls28-dev libmad0-dev \
-            libvorbis-dev libogg-dev libflac-dev libmpg123-dev libopus-dev \
-            libtheora-dev libspeex-dev libsndfile1-dev libpulse-dev libjack-jackd2-dev \
-            libasound2-dev libavcodec-dev libavformat-dev libswscale-dev libavutil-dev \
-            libpostproc-dev libvpx-dev libx264-dev libx265-dev libnuma-dev zlib1g-dev \
-            libfribidi-dev libfreetype6-dev libfontconfig1-dev libharfbuzz-dev \
-            libpango1.0-dev libsdl2-dev libmodplug-dev \
-            libxcb-composite0-dev libxcb-render0-dev libxcb-xfixes0-dev libxcb-keysyms1-dev \
-            libxcb-randr0-dev libxcb-image0-dev libxcb-icccm4-dev libxcb-sync0-dev \
-            libxcb-shape0-dev libxcb-xinerama0-dev libxcb-xkb-dev x11proto-composite-dev \
-            x11proto-randr-dev x11proto-xext-dev libbsd-dev \
-            libxpm-dev \
-            libgl1-mesa-dev libglu1-mesa-dev \
-            qtbase5-dev qttools5-dev qt5-qmake libqt5svg5-dev \
-            libavdevice-dev libavfilter-dev libavresample-dev libswresample-dev libmatroska-dev
-          apt-get clean
+            zlib1g-dev
 
-      - name: Download VLC 3.0.17.4 source
+      - name: Configure VLC
         run: |
-          set -euxo pipefail
-          cd "$GITHUB_WORKSPACE"
-          wget --progress=dot:giga https://download.videolan.org/pub/videolan/vlc/3.0.17.4/vlc-3.0.17.4.tar.xz
-          tar xf vlc-3.0.17.4.tar.xz
-
-      - name: Configure, compile, and build VLC with Qt GUI + OpenGL + XVideo
-        run: |
-          set -euxo pipefail
-          cd "$GITHUB_WORKSPACE/vlc-3.0.17.4"
-          export CFLAGS="-O2 -fPIC"
-          export CXXFLAGS="-O2 -fPIC"
-          ./configure --prefix="$GITHUB_WORKSPACE/vlc-build" \
-            --enable-shared --disable-static \
-            --enable-qt \
-            --enable-skins2 \
-            --enable-x11 \
+          cd vlc
+          ./bootstrap
+          ./configure \
+            --prefix=/usr \
             --enable-xcb \
-            --enable-pulse \
+            --enable-xvideo \
+            --enable-glx \
+            --enable-sdl \
             --enable-alsa \
-            --enable-x265 \
-            --enable-x264 \
-            --enable-libvpx \
-            --enable-libflac \
-            --enable-mpg123 \
-            --enable-opus \
-            --enable-theora \
-            --enable-vorbis \
-            --enable-speex \
-            --enable-avdevice \
-            --enable-avfilter \
-            --enable-avresample \
-            --enable-swresample \
-            --enable-matroska \
-            --enable-aac \
-            --enable-opengl \
-            --enable-xvideo
-          make -j$(nproc)
-          make install
+            --enable-mad \
+            --enable-mpeg2 \
+            --enable-libass \
+            --enable-qt
+          cd ..
 
-      - name: Package VLC build as tar.xz
+      - name: Build VLC
         run: |
-          set -euxo pipefail
-          cd "$GITHUB_WORKSPACE"
-          tar -cJf vlc-3.0.17.4-qt-full.tar.xz -C vlc-build .
+          cd vlc
+          make -j$(nproc)
+          sudo make install DESTDIR=../vlc-package
+          cd ..
 
-      - name: Upload VLC tarball
-        uses: actions/upload-artifact@v4
+      - name: Package VLC as .deb
+        run: |
+          cd vlc-package
+          mkdir -p DEBIAN
+          cat <<EOF > DEBIAN/control
+          Package: vlc-legacy
+          Version: 3.0.17.4
+          Section: video
+          Priority: optional
+          Architecture: amd64
+          Maintainer: Legacy VLC Build
+          Description: VLC 3.0.17.4 Vetinari - Legacy build with older codecs
+          EOF
+          dpkg-deb --build .
+          mv *.deb ../vlc-3.0.17.4.deb
+          cd ..
+
+      - name: Upload VLC package
+        uses: actions/upload-artifact@v3
         with:
-          name: vlc-3.0.17.4-qt-full
-          path: vlc-3.0.17.4-qt-full.tar.xz
+          name: vlc-3.0.17.4
+          path: vlc-3.0.17.4.deb
