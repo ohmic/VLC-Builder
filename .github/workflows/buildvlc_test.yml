@@ -31,7 +31,7 @@ jobs:
             libxcb-shm0-dev libxcb-xv0-dev libxcb1-dev libx11-dev libxext-dev \
             libxinerama-dev libxrandr-dev libxv-dev libva-dev libvdpau-dev libgles2-mesa-dev \
             libwayland-dev wayland-protocols libgcrypt20-dev libgnutls28-dev libmad0-dev \
-            libvorbis-dev libogg-dev libflac-dev libfaad-dev libmpg123-dev libopus-dev \
+            libvorbis-dev libogg-dev libflac-dev libmpg123-dev libopus-dev \
             libtheora-dev libspeex-dev libsndfile1-dev libpulse-dev libjack-jackd2-dev \
             libasound2-dev libavcodec-dev libavformat-dev libswscale-dev libavutil-dev \
             libpostproc-dev libvpx-dev libx264-dev libx265-dev libnuma-dev zlib1g-dev \
@@ -42,8 +42,7 @@ jobs:
             libxcb-shape0-dev libxcb-xinerama0-dev libxcb-xkb-dev x11proto-composite-dev \
             x11proto-randr-dev x11proto-xext-dev libbsd-dev \
             qtbase5-dev qttools5-dev qt5-qmake libqt5svg5-dev \
-            libavdevice-dev libavfilter-dev libavresample-dev libswresample-dev libmatroska-dev \
-            libfaac-dev libaacplus-dev
+            libavdevice-dev libavfilter-dev libavresample-dev libswresample-dev libmatroska-dev
           apt-get clean
 
       - name: Download VLC 3.0.17.4 source
@@ -71,7 +70,6 @@ jobs:
             --enable-x264 \
             --enable-libvpx \
             --enable-libflac \
-            --enable-faac \
             --enable-mpg123 \
             --enable-opus \
             --enable-theora \
