@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install VLC build dependencies (Qt GUI + codecs + FFmpeg libs + skins2)
+      - name: Install VLC build dependencies (Qt GUI + codecs + FFmpeg + OpenGL + XVideo)
         run: |
           set -euxo pipefail
           apt-get update
@@ -42,6 +42,7 @@ jobs:
             libxcb-shape0-dev libxcb-xinerama0-dev libxcb-xkb-dev x11proto-composite-dev \
             x11proto-randr-dev x11proto-xext-dev libbsd-dev \
             libxpm-dev \
+            libgl1-mesa-dev libglu1-mesa-dev \
             qtbase5-dev qttools5-dev qt5-qmake libqt5svg5-dev \
             libavdevice-dev libavfilter-dev libavresample-dev libswresample-dev libmatroska-dev
           apt-get clean
@@ -53,7 +54,7 @@ jobs:
           wget --progress=dot:giga https://download.videolan.org/pub/videolan/vlc/3.0.17.4/vlc-3.0.17.4.tar.xz
           tar xf vlc-3.0.17.4.tar.xz
 
-      - name: Configure, compile, and build VLC with Qt GUI
+      - name: Configure, compile, and build VLC with Qt GUI + OpenGL + XVideo
         run: |
           set -euxo pipefail
           cd "$GITHUB_WORKSPACE/vlc-3.0.17.4"
@@ -81,7 +82,9 @@ jobs:
             --enable-avresample \
             --enable-swresample \
             --enable-matroska \
-            --enable-aac
+            --enable-aac \
+            --enable-opengl \
+            --enable-xvideo
           make -j$(nproc)
           make install
 
