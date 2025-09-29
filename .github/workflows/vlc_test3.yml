@@ -1,0 +1,80 @@
+name: Build VLC 3.0.17.4 for Debian Bullseye
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04   # closer to Bullseye deps
+    steps:
+      - name: Checkout VLC source
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git
+          git clone https://code.videolan.org/videolan/vlc.git
+          cd vlc
+          git checkout 3.0.17.4
+          cd ..
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake build-essential cmake \
+            pkg-config git wget curl \
+            libtool libtool-bin m4 yasm nasm \
+            libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev \
+            libx11-dev libxext-dev libxinerama-dev libxrandr-dev \
+            libqt5x11extras5-dev qtbase5-dev qttools5-dev \
+            libgl1-mesa-dev libgles2-mesa-dev \
+            libavcodec-dev libavformat-dev libswscale-dev libavutil-dev \
+            liba52-0.7.4-dev libmad0-dev libmpeg2-4-dev \
+            libvorbis-dev libogg-dev libopus-dev \
+            libtheora-dev libflac-dev libspeex-dev \
+            libvpx-dev libx264-dev libx265-dev \
+            libdvdnav-dev libdvdread-dev libbluray-dev \
+            libass-dev libfreetype6-dev \
+            lua5.2 liblua5.2-dev \
+            zlib1g-dev
+      - name: Configure VLC
+        run: |
+          cd vlc
+          ./bootstrap
+          ./configure \
+            --prefix=/usr \
+            --enable-xcb \
+            --enable-xvideo \
+            --enable-glx \
+            --enable-sdl \
+            --enable-alsa \
+            --enable-mad \
+            --enable-mpeg2 \
+            --enable-libass \
+            --enable-qt
+          cd ..
+      - name: Build VLC
+        run: |
+          cd vlc
+          make -j$(nproc)
+          sudo make install DESTDIR=../vlc-package
+          cd ..
+      - name: Package VLC as .deb
+        run: |
+          cd vlc-package
+          mkdir -p DEBIAN
+          cat <<EOF > DEBIAN/control
+          Package: vlc-legacy
+          Version: 3.0.17.4
+          Section: video
+          Priority: optional
+          Architecture: amd64
+          Maintainer: Legacy VLC Build
+          Description: VLC 3.0.17.4 Vetinari - Legacy build with older codecs
+          EOF
+          dpkg-deb --build .
+          mv *.deb ../vlc-3.0.17.4.deb
+          cd ..
+      - name: Upload VLC package
+        uses: actions/upload-artifact@v3
+        with:
+          name: vlc-3.0.17.4
+          path: vlc-3.0.17.4.deb
